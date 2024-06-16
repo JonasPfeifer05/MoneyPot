@@ -20,7 +20,9 @@ Bun.serve({
 
         const url = new URL(request.url);
         let response;
-        if (url.pathname === "/get") {
+        if (url.pathname === "/") {
+            response = new Response(Bun.file(import.meta.dir + "/../html/index.html"))
+        } else if (url.pathname === "/get") {
             response = Response.json({amount: await get()})
         } else if (url.pathname === "/add") {
             let currentAmount = await get();
@@ -28,7 +30,9 @@ Bun.serve({
             let newAmount = currentAmount - addAmount;
             await set(newAmount)
             response = Response.json({amount: newAmount})
-        } else response = new Response("404");
+        } else {
+            response = new Response("404", {status: 404});
+        }
 
         response.headers.set('Access-Control-Allow-Origin', '*');
         response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
