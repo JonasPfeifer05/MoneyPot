@@ -9,16 +9,12 @@
 <h1 id="title">N&J's MoneyPot</h1>
 <div id="pot-content"></div>
 <div id="bottom-bar">
-    <button id="add-button" class="action-button">Add</button>
-    <button id="refresh-button" class="action-button">Refresh</button>
+    <button id="add-button" class="action-button" type="button">Add</button>
+    <button id="refresh-button" class="action-button" type="button">Refresh</button>
 </div>
 </body>
 
 <script>
-    function sleep(milliseconds) {
-        return new Promise(resolve => setTimeout(resolve, milliseconds));
-    }
-
     function moneyFormat(amount) {
         let negative = amount < 0
         amount = Math.abs(amount)
@@ -36,12 +32,17 @@
         return (negative ? "-" : "") + (front === "" ? "0" : front) + "." + decimals + "€"
     }
 
-    function setMoney(amount) {
+    function setMoneyValue(amount) {
         document.getElementById("pot-content").innerText = moneyFormat(amount)
     }
 
     function getMoneyClass(amount) {
         return amount === 0 ? "white" : "red";
+    }
+
+    function setMoney(amount) {
+        setMoneyValue(amount)
+        setMoneyClass(amount)
     }
 
     function setMoneyClass(amount) {
@@ -50,12 +51,25 @@
 
     async function onAdd() {
         let amount = Number(prompt("Please enter amount to add!"))
-        await updateAmount(amount)
-        await loadPage()
+        let newAmount = await updateAmount(amount)
+        setMoney(newAmount)
     }
 
     async function updateAmount(amount) {
-        await sleep(100)
+        let response = await fetch("http://localhost:8080/add", {
+            method: "POST",
+            mode: "cors",
+            credentials: "same-origin",
+            cache: "no-cache",
+            headers: {
+                'Accept': 'application/json'
+            },
+            body: amount.toString(),
+            redirect: 'follow',
+            referrerPolicy: 'no-referrer'
+        });
+
+        return (await response.json()).amount
     }
 
     function onRefresh() {
@@ -68,15 +82,24 @@
     }
 
     async function fetchAmount() {
-        await sleep(100)
-        return -1009.37
+        let response = await fetch("http://localhost:8080/get", {
+            method: "GET",
+            mode: "cors",
+            credentials: "same-origin",
+            cache: "no-cache",
+            headers: {
+                'Accept': 'application/json'
+            },
+            redirect: 'follow',
+            referrerPolicy: 'no-referrer'
+        });
+
+        return (await response.json()).amount
     }
 
     async function loadPage() {
         let amount = await fetchAmount();
-
         setMoney(amount)
-        setMoneyClass(amount)
         setClickEvents()
     }
 

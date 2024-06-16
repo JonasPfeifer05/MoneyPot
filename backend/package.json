@@ -1,11 +1,14 @@
 {
   "name": "backend",
   "module": "index.ts",
-  "type": "module",
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "type": "module",
+  "dependencies": {
+    "@kvs/node-localstorage": "^2.2.0"
   }
 }
