@@ -8,6 +8,9 @@
 <body>
 <h1 id="title">N&J's MoneyPot</h1>
 <div id="pot-balance"></div>
+<ul id="pot-history">
+    <li class="history-entry">example</li>
+</ul>
 <div id="bottom-bar">
     <button id="add-button" class="action-button" type="button">Add</button>
     <button id="refresh-button" class="action-button" type="button">Refresh</button>
@@ -32,8 +35,7 @@
     async function onAdd() {
         let amount = Number(prompt("Please enter amount to add!"))
         let newHistory = await addAmount(amount)
-        let newAmount = historyToAmount(newHistory)
-        setMoney(newAmount)
+        updatedValues(newHistory)
     }
 
     async function onRefresh() {
@@ -44,8 +46,28 @@
 
     function updatedValues(history) {
         let amount = historyToAmount(history)
-        //setHistory(history)
+        setHistory(history)
         setMoney(amount)
+    }
+
+    function setHistory(history) {
+        let parent = getHistoryParent()
+        parent.innerHTML = ""
+        for (let entryValue of history) {
+            parent.appendChild(buildHistoryEntry(entryValue))
+        }
+    }
+
+    function getHistoryParent() {
+        return document.getElementById("pot-history")
+    }
+
+    function buildHistoryEntry(value) {
+        let entry = document.createElement("li")
+        entry.innerText = moneyFormat(value)
+        entry.classList.add("history-entry")
+        entry.classList.add(getMoneyClass(value))
+        return entry
     }
 
     function setMoney(amount) {
@@ -144,6 +166,9 @@
         font-size: 40px;
 
         text-align: center;
+
+        height: 45px;
+        margin: 25px 0;
     }
 
     #pot-balance {
@@ -153,7 +178,9 @@
 
         text-align: center;
 
-        padding: 10px;
+        height: 35px;
+
+        margin: 10px 0;
     }
 
     #bottom-bar {
@@ -179,6 +206,37 @@
         border-radius: 10px;
 
         font-size: 15px;
+    }
+
+    #pot-history {
+        height: calc(100vh - 40px - 95px - 35px - 80px);
+
+        padding: 0;
+        margin: 20px 30px;
+
+        overflow: scroll;
+    }
+
+    #pot-history li:last-child {
+        margin: 0 5px 0 0 !important;
+    }
+
+    .history-entry {
+        display: flex;
+        justify-content: left;
+        align-items: center;
+
+        list-style: none;
+
+        background: #2A2A2A;
+
+        height: 50px;
+
+        box-sizing: border-box;
+        padding: 10px 20px;
+        margin: 0 5px 20px 0;
+
+        border-radius: 10px;
     }
 </style>
 </html>
