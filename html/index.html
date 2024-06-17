@@ -9,7 +9,7 @@
 <h1 id="title">N&J's MoneyPot</h1>
 <div id="pot-balance"></div>
 <ul id="pot-history">
-    <li class="history-entry">example</li>
+    <li class="history-entry"><div>9.99</div><div class="entry-trail"><div>example</div><button class="delete-button">delete</button></div></li>
 </ul>
 <div id="bottom-bar">
     <button id="add-button" class="action-button" type="button">Add</button>
@@ -53,8 +53,8 @@
     function setHistory(history) {
         let parent = getHistoryParent()
         parent.innerHTML = ""
-        for (let entryValue of history) {
-            parent.appendChild(buildHistoryEntry(entryValue))
+        for (let index in history) {
+            parent.appendChild(buildHistoryEntry(history[index], index))
         }
     }
 
@@ -62,11 +62,35 @@
         return document.getElementById("pot-history")
     }
 
-    function buildHistoryEntry(value) {
+    function buildHistoryEntry(data, index) {
         let entry = document.createElement("li")
-        entry.innerText = moneyFormat(value)
         entry.classList.add("history-entry")
-        entry.classList.add(getMoneyClass(value))
+
+        let value = document.createElement("div")
+        value.innerText = moneyFormat(data.amount)
+        value.classList.add(getMoneyClass(data.amount))
+
+        let trailing = document.createElement("div")
+        trailing.classList.add("entry-trail")
+
+        let date = document.createElement("div")
+        date.innerText = new Date(data.timestamp).toLocaleDateString()
+
+        let button = document.createElement("button")
+        button.classList.add("delete-button")
+        button.innerText = "Delete"
+        button.onclick = async () => {
+            let history = await removeEntry(index)
+            console.log(history)
+            updatedValues(history)
+        }
+
+        trailing.appendChild(date)
+        trailing.appendChild(button)
+
+        entry.appendChild(value)
+        entry.appendChild(trailing)
+
         return entry
     }
 
@@ -88,7 +112,7 @@
     }
 
     function historyToAmount(history) {
-        return history.reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+        return history.reduce((previousValue, currentValue) => previousValue + currentValue.amount, 0)
     }
 
     function moneyFormat(amount) {
@@ -121,7 +145,7 @@
             referrerPolicy: 'no-referrer'
         });
 
-        return (await response.json()).amount
+        return (await response.json()).history
     }
 
     async function addAmount(amount) {
@@ -133,12 +157,32 @@
             headers: {
                 'Accept': 'application/json'
             },
-            body: (-amount).toString(),
+            body: JSON.stringify({
+                amount: -amount,
+                timestamp: Date.now()
+            }),
             redirect: 'follow',
             referrerPolicy: 'no-referrer'
         });
 
-        return (await response.json()).amount
+        return (await response.json()).history
+    }
+
+    async function removeEntry(index) {
+        let response = await fetch(window.location.origin + "/delete", {
+            method: "DELETE",
+            mode: "cors",
+            credentials: "same-origin",
+            cache: "no-cache",
+            headers: {
+                'Accept': 'application/json'
+            },
+            body: index.toString(),
+            redirect: 'follow',
+            referrerPolicy: 'no-referrer'
+        });
+
+        return (await response.json()).history
     }
 </script>
 
@@ -223,7 +267,7 @@
 
     .history-entry {
         display: flex;
-        justify-content: left;
+        justify-content: space-between;
         align-items: center;
 
         list-style: none;
@@ -237,6 +281,24 @@
         margin: 0 5px 20px 0;
 
         border-radius: 10px;
+    }
+
+    .entry-trail {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        height: 100%;
+    }
+
+    .delete-button {
+        background: #353535;
+        border: none;
+        border-radius: 10px;
+
+        font-size: 15px;
+
+        height: 100%;
     }
 </style>
 </html>

@@ -23,13 +23,20 @@ Bun.serve({
         if (url.pathname === "/") {
             response = new Response(Bun.file(import.meta.dir + "/../html/index.html"))
         } else if (url.pathname === "/get") {
-            response = Response.json({amount: await get()})
+            response = Response.json({history: await get()})
         } else if (url.pathname === "/add") {
             let current = await get();
-            let addAmount = Number(await request.text())
-            let newAmount = [addAmount, ...current];
-            await set(newAmount)
-            response = Response.json({amount: newAmount})
+            let entry = await request.json()
+            let newHistory = [entry, ...current];
+            await set(newHistory)
+            response = Response.json({history: newHistory})
+        } else if (url.pathname === "/delete") {
+            let index = Number(await request.text())
+            let current = await get();
+            current.splice(index, 1)
+            await set(current)
+            console.log(current)
+            response = Response.json({history: current})
         } else {
             response = new Response("404", {status: 404});
         }
