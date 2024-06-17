@@ -8,13 +8,13 @@ Bun.serve({
             version: 1
         })
 
-        async function get(): Promise<number> {
+        async function get(): Promise<number[]> {
             let amount = await storage.get("amount");
 
-            return amount === undefined ? 0 : amount as number
+            return amount === undefined ? [] : amount as number[]
         }
 
-        async function set(amount: number) {
+        async function set(amount: number[]) {
             await storage.set("amount", amount)
         }
 
@@ -25,9 +25,9 @@ Bun.serve({
         } else if (url.pathname === "/get") {
             response = Response.json({amount: await get()})
         } else if (url.pathname === "/add") {
-            let currentAmount = await get();
+            let current = await get();
             let addAmount = Number(await request.text())
-            let newAmount = currentAmount - addAmount;
+            let newAmount = [addAmount, ...current];
             await set(newAmount)
             response = Response.json({amount: newAmount})
         } else {
