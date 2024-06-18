@@ -49,6 +49,7 @@
 
     async function onAdd() {
         let amount = Number(prompt("Please enter amount to add!"))
+        if (!amount) return
         let data = await addEntry(amount)
         updateValues(data)
     }
