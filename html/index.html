@@ -7,9 +7,23 @@
 </head>
 <body>
 <h1 id="title">N&J's MoneyPot</h1>
+<div id="visit-count">
+    <div id="visit-count-title">Visit Count:</div>
+    <div id="visit-value">1x</div>
+    <div id="visit-trail">
+        <button id="inc-button">Increase</button>
+        <button id="dec-button">Decrease</button>
+    </div>
+</div>
 <div id="pot-balance"></div>
 <ul id="pot-history">
-    <li class="history-entry"><div>9.99</div><div class="entry-trail"><div>example</div><button class="delete-button">delete</button></div></li>
+    <li class="history-entry">
+        <div>9.99</div>
+        <div class="entry-trail">
+            <div>example</div>
+            <button class="delete-button">delete</button>
+        </div>
+    </li>
 </ul>
 <div id="bottom-bar">
     <button id="add-button" class="action-button" type="button">Add</button>
@@ -21,33 +35,48 @@
     loadPage()
 
     async function loadPage() {
-        let history = await fetchHistory()
-        console.log(history)
-        updatedValues(history)
+        let data = await fetchData()
+        updateValues(data)
         setClickEvents()
     }
 
     function setClickEvents() {
-        document.getElementById("add-button").onclick = onAdd;
-        document.getElementById("refresh-button").onclick = onRefresh;
+        document.getElementById("add-button").onclick = onAdd
+        document.getElementById("refresh-button").onclick = onRefresh
+        document.getElementById("inc-button").onclick = onIncrease
+        document.getElementById("dec-button").onclick = onDecrease
     }
 
     async function onAdd() {
         let amount = Number(prompt("Please enter amount to add!"))
-        let newHistory = await addAmount(amount)
-        updatedValues(newHistory)
+        let data = await addEntry(amount)
+        updateValues(data)
     }
 
     async function onRefresh() {
-        let history = await fetchHistory()
-        console.log(history)
-        updatedValues(history)
+        let data = await fetchData()
+        updateValues(data)
     }
 
-    function updatedValues(history) {
-        let amount = historyToAmount(history)
-        setHistory(history)
+    async function onIncrease() {
+        let data = await increaseVisitCount()
+        updateValues(data)
+    }
+
+    async function onDecrease() {
+        let data = await decreaseVisitCount()
+        updateValues(data)
+    }
+
+    function updateValues(data) {
+        let amount = historyToAmount(data.history)
+        setHistory(data.history)
         setMoney(amount)
+        setVisitCount(data.visits)
+    }
+
+    function setVisitCount(visits) {
+        document.getElementById("visit-value").innerText = visits.toString() + "x"
     }
 
     function setHistory(history) {
@@ -81,8 +110,7 @@
         button.innerText = "Delete"
         button.onclick = async () => {
             let history = await removeEntry(index)
-            console.log(history)
-            updatedValues(history)
+            updateValues(history)
         }
 
         trailing.appendChild(date)
@@ -132,7 +160,7 @@
         return (negative ? "-" : "") + (front === "" ? "0" : front) + "." + decimals + "€"
     }
 
-    async function fetchHistory() {
+    async function fetchData() {
         let response = await fetch(window.location.origin + "/get", {
             method: "GET",
             mode: "cors",
@@ -145,11 +173,11 @@
             referrerPolicy: 'no-referrer'
         });
 
-        return (await response.json()).history
+        return await response.json()
     }
 
-    async function addAmount(amount) {
-        let response = await fetch(window.location.origin + "/add", {
+    async function addEntry(amount) {
+        let response = await fetch(window.location.origin + "/entry", {
             method: "POST",
             mode: "cors",
             credentials: "same-origin",
@@ -165,11 +193,11 @@
             referrerPolicy: 'no-referrer'
         });
 
-        return (await response.json()).history
+        return await response.json()
     }
 
     async function removeEntry(index) {
-        let response = await fetch(window.location.origin + "/delete", {
+        let response = await fetch(window.location.origin + "/entry", {
             method: "DELETE",
             mode: "cors",
             credentials: "same-origin",
@@ -182,11 +210,47 @@
             referrerPolicy: 'no-referrer'
         });
 
-        return (await response.json()).history
+        return await response.json()
+    }
+
+    async function increaseVisitCount() {
+        let response = await fetch(window.location.origin + "/visits", {
+            method: "POST",
+            mode: "cors",
+            credentials: "same-origin",
+            cache: "no-cache",
+            headers: {
+                'Accept': 'application/json'
+            },
+            redirect: 'follow',
+            referrerPolicy: 'no-referrer'
+        });
+
+        return await response.json()
+    }
+
+    async function decreaseVisitCount() {
+        let response = await fetch(window.location.origin + "/visits", {
+            method: "DELETE",
+            mode: "cors",
+            credentials: "same-origin",
+            cache: "no-cache",
+            headers: {
+                'Accept': 'application/json'
+            },
+            redirect: 'follow',
+            referrerPolicy: 'no-referrer'
+        });
+
+        return await response.json()
     }
 </script>
 
 <style>
+    * {
+        font-family: Arial, serif;
+    }
+
     .white {
         color: white !important;
     }
@@ -206,7 +270,6 @@
     }
 
     #title {
-        font-family: Arial, serif;
         font-size: 40px;
 
         text-align: center;
@@ -216,7 +279,6 @@
     }
 
     #pot-balance {
-        font-family: Arial, serif;
         font-size: 30px;
         font-weight: bold;
 
@@ -300,5 +362,44 @@
 
         height: 100%;
     }
+
+    #visit-count {
+        display: flex;
+        justify-content: center;
+
+        height: 30px;
+
+        padding: 10px;
+    }
+
+    #visit-count-title {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #visit-value {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        width: 85px;
+    }
+
+    #visit-trail {
+        display: flex;
+        justify-content: space-evenly;
+        width: 170px;
+    }
+
+    #visit-count div button {
+        background: #353535;
+        border: none;
+        border-radius: 10px;
+
+        font-size: 15px;
+
+        height: 100%;
+     }
 </style>
 </html>
